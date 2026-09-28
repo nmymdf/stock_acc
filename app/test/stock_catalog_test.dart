@@ -23,4 +23,14 @@ void main() {
     expect(searchStocks('00679b').map((s) => s.code), contains('00679B'));
     expect(searchStocks('0055').map((s) => s.code), contains('0055'));
   });
+
+  test('債券型 ETF（代號後面帶 B）歸類為上櫃，抓股價才會用對交易所前綴', () {
+    // 曾經誤標成「上市」，導致抓即時股價時用錯 tse_ 前綴查不到資料
+    // （Yahoo 股市這類代號的網址是 .TWO 結尾，TWO = 上櫃）。
+    for (final s in kBuiltinStocks) {
+      if (RegExp(r'\d+B$').hasMatch(s.code)) {
+        expect(s.market, '上櫃', reason: '${s.code}（${s.name}）應該是上櫃');
+      }
+    }
+  });
 }
