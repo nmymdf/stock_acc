@@ -22,7 +22,7 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          const SectionHeader(left: '人與券商帳戶'),
+          const SectionHeader(left: '戶名與券商帳戶'),
           for (final p in repo.persons)
             Card(
               margin: const EdgeInsets.only(bottom: 10),
@@ -35,8 +35,8 @@ class SettingsScreen extends StatelessWidget {
                       if (v == 'delete') _confirmDeletePerson(context, repo, p.id, p.name);
                     },
                     itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'rename', child: Text('修改名稱')),
-                      PopupMenuItem(value: 'delete', child: Text('刪除這個人')),
+                      PopupMenuItem(value: 'rename', child: Text('修改戶名')),
+                      PopupMenuItem(value: 'delete', child: Text('刪除這個戶名')),
                     ],
                   ),
                 ),
@@ -58,7 +58,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           FilledButton.tonal(
             onPressed: () => _addPersonDialog(context, repo),
-            child: const Text('＋ 新增人'),
+            child: const Text('＋ 新增戶名'),
           ),
           const SectionHeader(left: '新聞'),
           Card(
@@ -101,8 +101,8 @@ class SettingsScreen extends StatelessWidget {
     final name = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('新增人'),
-        content: TextField(controller: ctrl, autofocus: true, decoration: const InputDecoration(labelText: '姓名或稱呼')),
+        title: const Text('新增戶名'),
+        content: TextField(controller: ctrl, autofocus: true, decoration: const InputDecoration(labelText: '戶名')),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
           FilledButton(onPressed: () => Navigator.pop(context, ctrl.text.trim()), child: const Text('新增')),
@@ -117,8 +117,8 @@ class SettingsScreen extends StatelessWidget {
     final name = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('修改名稱'),
-        content: TextField(controller: ctrl, autofocus: true, decoration: const InputDecoration(labelText: '姓名或稱呼')),
+        title: const Text('修改戶名'),
+        content: TextField(controller: ctrl, autofocus: true, decoration: const InputDecoration(labelText: '戶名')),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
           FilledButton(onPressed: () => Navigator.pop(context, ctrl.text.trim()), child: const Text('儲存')),
@@ -133,7 +133,7 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('刪除「$name」？'),
-        content: const Text('這個人底下的所有帳戶和交易紀錄也會一起刪除，無法復原。'),
+        content: const Text('這個戶名底下的所有帳戶和交易紀錄也會一起刪除，無法復原。'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
           FilledButton(

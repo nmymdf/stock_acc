@@ -46,7 +46,7 @@ class OverviewScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          const SectionHeader(left: '各人統計', right: '市值'),
+          const SectionHeader(left: '各戶統計', right: '市值'),
           RowList(
             children: [
               for (final p in repo.persons)
@@ -56,7 +56,7 @@ class OverviewScreen extends StatelessWidget {
           if (repo.persons.isEmpty)
             const Padding(
               padding: EdgeInsets.all(16),
-              child: Text('還沒有任何人，到「設定」新增一個人開始記帳。'),
+              child: Text('還沒有任何戶名，到「設定」新增一個戶名開始記帳。'),
             ),
         ],
       ),
@@ -99,7 +99,7 @@ class PersonDetail extends StatelessWidget {
     final person = repo.personById(personId);
     if (person == null) {
       return Scaffold(
-        appBar: const DetailAppBar(title: Text('個人明細')),
+        appBar: const DetailAppBar(title: Text('戶名明細')),
         body: const EmptyHint(text: '這個人已經被刪除了'),
       );
     }
@@ -148,7 +148,7 @@ class PersonDetail extends StatelessWidget {
             }),
             const SizedBox(height: 6),
           ],
-          if (accounts.isEmpty) const Padding(padding: EdgeInsets.all(16), child: Text('這個人還沒有券商帳戶，到「設定」新增。')),
+          if (accounts.isEmpty) const Padding(padding: EdgeInsets.all(16), child: Text('這個戶名還沒有券商帳戶，到「設定」新增。')),
         ],
       ),
     );

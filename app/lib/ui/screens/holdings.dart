@@ -76,7 +76,7 @@ class _HoldingsScreenState extends State<HoldingsScreen> {
             Expanded(
               child: DropdownButtonFormField<String?>(
                 initialValue: _personId,
-                decoration: const InputDecoration(labelText: '人'),
+                decoration: const InputDecoration(labelText: '戶名'),
                 items: [
                   const DropdownMenuItem(value: null, child: Text('全部')),
                   for (final p in repo.persons) DropdownMenuItem(value: p.id, child: Text(p.name)),
