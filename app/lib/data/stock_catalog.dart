@@ -1,7 +1,8 @@
 /// 內建的台股代號 → 名稱對照表，輸入代號時不用連網也能帶出名稱。
 ///
-/// 只收錄常見的上市櫃股票和 ETF，不是完整清單。查不到的代號，新增交易時
-/// 仍然可以輸入，名稱欄位留給使用者自己填，之後照原樣顯示。
+/// 這份清單是手動整理的常見上市櫃股票和 ETF，範圍比一開始大很多，但終究
+/// 不是官方的完整清單，新上市的股票或比較冷門的代號還是可能查不到。查不到
+/// 的代號，新增交易時仍然可以輸入，名稱欄位留給使用者自己填，之後照原樣顯示。
 library;
 
 class StockInfo {
@@ -13,6 +14,7 @@ class StockInfo {
 }
 
 const List<StockInfo> kBuiltinStocks = [
+  // ---- 權值股 / 熱門個股 ----
   StockInfo('2330', '台積電', '上市'),
   StockInfo('2317', '鴻海', '上市'),
   StockInfo('2454', '聯發科', '上市'),
@@ -22,6 +24,7 @@ const List<StockInfo> kBuiltinStocks = [
   StockInfo('2891', '中信金', '上市'),
   StockInfo('2603', '長榮', '上市'),
   StockInfo('2609', '陽明', '上市'),
+  StockInfo('2615', '萬海', '上市'),
   StockInfo('2308', '台達電', '上市'),
   StockInfo('2382', '廣達', '上市'),
   StockInfo('2357', '華碩', '上市'),
@@ -36,6 +39,11 @@ const List<StockInfo> kBuiltinStocks = [
   StockInfo('2885', '元大金', '上市'),
   StockInfo('2892', '第一金', '上市'),
   StockInfo('2880', '華南金', '上市'),
+  StockInfo('2887', '台新金', '上市'),
+  StockInfo('2883', '開發金', '上市'),
+  StockInfo('2890', '永豐金', '上市'),
+  StockInfo('5880', '合庫金', '上市'),
+  StockInfo('2801', '彰銀', '上市'),
   StockInfo('5871', '中租-KY', '上市'),
   StockInfo('3008', '大立光', '上市'),
   StockInfo('2395', '研華', '上市'),
@@ -48,19 +56,159 @@ const List<StockInfo> kBuiltinStocks = [
   StockInfo('2207', '和泰車', '上市'),
   StockInfo('2912', '統一超', '上市'),
   StockInfo('9910', '豐泰', '上市'),
+  StockInfo('1326', '台化', '上市'),
+  StockInfo('2105', '正新', '上市'),
+  StockInfo('2201', '裕隆', '上市'),
+  StockInfo('2301', '光寶科', '上市'),
+  StockInfo('2303', '聯電', '上市'),
+  StockInfo('2324', '仁寶', '上市'),
+  StockInfo('2356', '英業達', '上市'),
+  StockInfo('2377', '微星', '上市'),
+  StockInfo('2385', '群光', '上市'),
+  StockInfo('2409', '友達', '上市'),
+  StockInfo('2474', '可成', '上市'),
+  StockInfo('3231', '緯創', '上市'),
+  StockInfo('3037', '欣興', '上市'),
+  StockInfo('3045', '台灣大', '上市'),
+  StockInfo('3702', '大聯大', '上市'),
+  StockInfo('4938', '和碩', '上市'),
+  StockInfo('6505', '台塑化', '上市'),
+  StockInfo('9904', '寶成', '上市'),
+  StockInfo('9945', '潤泰新', '上市'),
   StockInfo('5347', '世界', '上櫃'),
   StockInfo('6488', '環球晶', '上櫃'),
   StockInfo('3443', '創意', '上櫃'),
   StockInfo('6669', '緯穎', '上市'),
   StockInfo('2345', '智邦', '上市'),
-  StockInfo('3037', '欣興', '上市'),
+
+  // ---- 大盤 / 市值型 ETF ----
   StockInfo('0050', '元大台灣50', '上市'),
-  StockInfo('0056', '元大高股息', '上市'),
-  StockInfo('00878', '國泰永續高股息', '上市'),
-  StockInfo('00919', '群益台灣精選高息', '上市'),
-  StockInfo('00929', '復華台灣科技優息', '上市'),
-  StockInfo('00713', '元大台灣高息低波', '上市'),
+  StockInfo('0051', '元大中型100', '上市'),
+  StockInfo('0052', '富邦科技', '上市'),
+  StockInfo('0053', '元大電子', '上市'),
+  StockInfo('0054', '元大台商50', '上市'),
+  StockInfo('0055', '元大MSCI金融', '上市'),
+  StockInfo('0057', '富邦摩台', '上市'),
+  StockInfo('006201', '元大富櫃50', '上市'),
+  StockInfo('006203', '元大MSCI台灣', '上市'),
+  StockInfo('006204', '永豐臺灣加權', '上市'),
   StockInfo('006208', '富邦台50', '上市'),
+  StockInfo('00850', '元大臺灣ESG永續', '上市'),
+  StockInfo('00905', 'FT臺灣Smart', '上市'),
+  StockInfo('00921', '兆豐龍頭等權重', '上市'),
+  StockInfo('00935', '野村臺灣新科技50', '上市'),
+
+  // ---- 高股息 / 高息型 ETF ----
+  StockInfo('0056', '元大高股息', '上市'),
+  StockInfo('00713', '元大台灣高息低波', '上市'),
+  StockInfo('00701', '國泰股利精選30', '上市'),
+  StockInfo('00728', '第一金工業30', '上市'),
+  StockInfo('00730', '富邦臺灣優質高息', '上市'),
+  StockInfo('00731', '復華富時高息低波', '上市'),
+  StockInfo('00762', '元大全球AI', '上市'),
+  StockInfo('00878', '國泰永續高股息', '上市'),
+  StockInfo('00881', '國泰台灣5G+', '上市'),
+  StockInfo('00882', '中信中國高股息', '上市'),
+  StockInfo('00891', '中信關鍵半導體', '上市'),
+  StockInfo('00892', '富邦台灣半導體', '上市'),
+  StockInfo('00893', '國泰智能電動車', '上市'),
+  StockInfo('00895', '富邦特選高股息30', '上市'),
+  StockInfo('00907', '永豐優息存股', '上市'),
+  StockInfo('00915', '凱基優選高股息30', '上市'),
+  StockInfo('00918', '大華優利高填息30', '上市'),
+  StockInfo('00919', '群益台灣精選高息', '上市'),
+  StockInfo('00927', '群益半導體收益', '上市'),
+  StockInfo('00929', '復華台灣科技優息', '上市'),
+  StockInfo('00930', '永豐ESG低碳高息', '上市'),
+  StockInfo('00932', '兆豐永續高息等權', '上市'),
+  StockInfo('00934', '中信成長高息', '上市'),
+  StockInfo('00936', '台新永續高息中小', '上市'),
+  StockInfo('00939', '統一台灣高息動能', '上市'),
+  StockInfo('00940', '元大台灣價值高息', '上市'),
+  StockInfo('00941', '中信上游半導體', '上市'),
+  StockInfo('00943', '兆豐半導體覆蓋', '上市'),
+  StockInfo('00946', '群益科技高息成長', '上市'),
+
+  // ---- 槓桿 / 反向 ETF ----
+  StockInfo('00631L', '元大台灣50正2', '上市'),
+  StockInfo('00632R', '元大台灣50反1', '上市'),
+  StockInfo('00633L', '富邦上證正2', '上市'),
+  StockInfo('00637L', '元大滬深300正2', '上市'),
+  StockInfo('00647L', '元大S&P500正2', '上市'),
+  StockInfo('00650L', '復華香港正2', '上市'),
+  StockInfo('00670L', '富邦NASDAQ正2', '上市'),
+  StockInfo('00673R', '元大S&P500反1', '上市'),
+  StockInfo('00675L', '富邦臺灣加權正2', '上市'),
+  StockInfo('00680L', '元大美股7-10正2', '上市'),
+  StockInfo('00681R', '元大美债20年反1', '上市'),
+  StockInfo('00706L', '元大S&P黃金正2', '上市'),
+  StockInfo('00707R', '富邦NASDAQ反1', '上市'),
+  StockInfo('00753L', '中信中國50正2', '上市'),
+  StockInfo('00655L', '國泰中國A50正2', '上市'),
+  StockInfo('00663L', '國泰臺灣加權正2', '上市'),
+  StockInfo('00664R', '國泰臺灣加權反1', '上市'),
+
+  // ---- 海外 / 產業主題 ETF ----
+  StockInfo('00646', '元大S&P500', '上市'),
+  StockInfo('00661', '元大日經225', '上市'),
+  StockInfo('00662', '富邦NASDAQ', '上市'),
+  StockInfo('00668', '國泰美國道瓊', '上市'),
+  StockInfo('00690', '兆豐藍籌30', '上市'),
+  StockInfo('00692', '富邦公司治理', '上市'),
+  StockInfo('00702', '國泰標普低波高息', '上市'),
+  StockInfo('00709', '富邦歐洲', '上市'),
+  StockInfo('00712', '復華富時不動產', '上市'),
+  StockInfo('00714', '群益道瓊美國地產', '上市'),
+  StockInfo('00735', '國泰新興市場', '上市'),
+  StockInfo('00739', '元大MSCI A股', '上市'),
+  StockInfo('00757', '統一FANG+', '上市'),
+  StockInfo('00770', '國泰北美科技', '上市'),
+  StockInfo('00830', '國泰費城半導體', '上市'),
+  StockInfo('00861', '元大全球未來通訊', '上市'),
+  StockInfo('00875', '國泰網路資安', '上市'),
+  StockInfo('00885', '富邦越南', '上市'),
+  StockInfo('00738U', '元大道瓊白銀', '上市'),
+  StockInfo('00682U', '元大S&P黃金', '上市'),
+  StockInfo('00752', '中信歐洲', '上市'),
+  StockInfo('00763U', '街口布蘭特原油', '上市'),
+
+  // ---- 債券型 ETF（代號後面加字母）----
+  StockInfo('00679B', '元大美债20年', '上市'),
+  StockInfo('00687B', '國泰20年美債', '上市'),
+  StockInfo('00695B', '富邦美債20年', '上市'),
+  StockInfo('00696B', '國泰US短期公債', '上市'),
+  StockInfo('00697B', '元大美债7-10', '上市'),
+  StockInfo('00710B', '復華中國政策金融債', '上市'),
+  StockInfo('00711B', '復華彭博巴克萊US IG', '上市'),
+  StockInfo('00719B', '元大美债1-3', '上市'),
+  StockInfo('00720B', '元大投資級公司債', '上市'),
+  StockInfo('00722B', '群益投資級金融債', '上市'),
+  StockInfo('00724B', '群益投資級公司債', '上市'),
+  StockInfo('00725B', '國泰投資級公司債', '上市'),
+  StockInfo('00726B', '國泰5Y+新興債', '上市'),
+  StockInfo('00727B', '國泰1-5Y金融債', '上市'),
+  StockInfo('00740B', '富邦全球投等債', '上市'),
+  StockInfo('00751B', '元大AAA至A公司債', '上市'),
+  StockInfo('00761B', '國泰A級公司債', '上市'),
+  StockInfo('00764B', '群益25年美債', '上市'),
+  StockInfo('00768B', '國泰A級醫療債', '上市'),
+  StockInfo('00772B', '中信高評級公司債', '上市'),
+  StockInfo('00775B', '新光投等債15+', '上市'),
+  StockInfo('00777B', '凱基金融債20+', '上市'),
+  StockInfo('00778B', '新光ESG風電債', '上市'),
+  StockInfo('00779B', '凱基優選高評級電力債', '上市'),
+  StockInfo('00785B', '富邦中國政策債', '上市'),
+  StockInfo('00792B', '群益投資級金融債', '上市'),
+  StockInfo('00857B', '安聯投資級美債20+', '上市'),
+  StockInfo('00859B', '中信投資級公司債', '上市'),
+  StockInfo('00860B', '國泰5G+一年期', '上市'),
+  StockInfo('00863B', '中信高評級科技債', '上市'),
+  StockInfo('00864B', '中信優先金融債', '上市'),
+  StockInfo('00865B', '國泰US短期公債', '上市'),
+  StockInfo('00933B', '國泰10Y+金融債', '上市'),
+
+  // ---- ETN / 商品期貨 ----
+  StockInfo('020030', '元大布蘭特原油', '上市'),
 ];
 
 final Map<String, StockInfo> kBuiltinStocksByCode = {
@@ -71,7 +219,7 @@ final Map<String, StockInfo> kBuiltinStocksByCode = {
 List<StockInfo> searchStocks(String query) {
   final q = query.trim();
   if (q.isEmpty) return const [];
-  return kBuiltinStocks
+  return kBuiltinStocksByCode.values
       .where((s) => s.code.startsWith(q) || s.name.contains(q))
       .toList();
 }
