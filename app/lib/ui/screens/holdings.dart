@@ -29,7 +29,7 @@ Widget buildStockRow(BuildContext context, StockSummary r, ScopeFilter scope, {b
     title: Text('${r.code}  ${repo.nameOf(r.code)}'),
     subtitle: Text(r.isClosed
         ? '已出清'
-        : '${shareTxt(r.shares)} · 均價 ${f2(r.avgCost)}'),
+        : '${shareTxt(r.shares)} · 均價 ${f2(r.avgCost)} · 成本 ${f0(r.cost)}'),
     trailingTop: q == null
         ? const Text('—')
         : Text.rich(TextSpan(children: [
@@ -105,12 +105,13 @@ class _HoldingsScreenState extends State<HoldingsScreen> {
             ),
           ]),
           const SizedBox(height: 10),
-          StatGrid(columns: 3, stats: [
+          StatGrid(columns: 4, stats: [
+            ('總成本', f0(totals.cost), null),
             ('市值', f0(totals.marketValue), null),
             ('未實現', fp(totals.unrealized), changeColor(context, totals.unrealized)),
             ('已實現', fp(totals.realized), changeColor(context, totals.realized)),
           ]),
-          SectionHeader(left: '持有中 ${held.length} 檔 · 點股票看交易明細', right: '現價 / 損益'),
+          SectionHeader(left: '持有中 ${held.length} 檔 · 點股票看交易明細', right: '成本 / 損益'),
           RowList(emptyText: '沒有持股', children: [for (final r in held) buildStockRow(context, r, scope)]),
           if (closed.isNotEmpty) ...[
             const SectionHeader(left: '已出清'),

@@ -82,7 +82,7 @@ class _PersonRow extends StatelessWidget {
       onTap: () => context.read<ShellController>().open(context, PersonRoute(personId)),
       title: Text(person.name),
       subtitle: Text(
-          '${accounts.length} 個帳戶 · ${s.where((r) => r.shares > 0).length} 檔持股\n未實現 ${fp(t.unrealized)}　已實現 ${fp(t.realized)}'),
+          '${accounts.length} 個帳戶 · ${s.where((r) => r.shares > 0).length} 檔持股 · 成本 ${f0(t.cost)}\n未實現 ${fp(t.unrealized)}　已實現 ${fp(t.realized)}'),
       trailingTop: Text(f0(t.marketValue)),
       trailingBottom: Text(fp(pl), style: TextStyle(color: changeColor(context, pl))),
     );
@@ -132,12 +132,13 @@ class PersonDetail extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    child: Row(
+                    child: Wrap(
+                      spacing: 14,
+                      runSpacing: 4,
                       children: [
+                        Text('成本 ${f0(t.cost)}'),
                         Text('市值 ${f0(t.marketValue)}'),
-                        const SizedBox(width: 14),
                         Text('未實現 ${fp(t.unrealized)}', style: TextStyle(color: changeColor(context, t.unrealized))),
-                        const SizedBox(width: 14),
                         Text('已實現 ${fp(t.realized)}', style: TextStyle(color: changeColor(context, t.realized))),
                       ],
                     ),

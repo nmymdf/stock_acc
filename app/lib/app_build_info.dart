@@ -4,4 +4,4 @@
 /// 畫面完全不顯示——這個版本改成最笨但最可靠的做法：每次要出新版本，
 /// 手動把這個數字往上加一，跟 pubspec.yaml 的 version 保持一致。
 /// 只要看到這個數字有變，就代表你拿到的是新編譯出來的版本。
-const String kAppVersion = 'v1.0.5+9';
+const String kAppVersion = 'v1.0.6+10';
