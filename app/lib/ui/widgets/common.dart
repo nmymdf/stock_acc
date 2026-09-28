@@ -170,6 +170,11 @@ class InfoRow extends StatelessWidget {
   final Widget? subtitle;
   final Widget? trailingTop;
   final Widget? trailingBottom;
+
+  /// 額外一行、佔滿整個寬度、放在標題和數字下面——資料太多塞不進左右兩欄
+  /// 時用這個，例如股票列的「2 張 · 均價 862.71 · 成本 2,027,643」，
+  /// 獨立一行才不會跟右邊的現價/損益擠在一起變得很亂。
+  final Widget? footer;
   final bool selected;
 
   const InfoRow({
@@ -179,6 +184,7 @@ class InfoRow extends StatelessWidget {
     this.subtitle,
     this.trailingTop,
     this.trailingBottom,
+    this.footer,
     this.selected = false,
   });
 
@@ -190,41 +196,54 @@ class InfoRow extends StatelessWidget {
       child: Container(
         color: selected ? scheme.primaryContainer.withValues(alpha: .5) : null,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DefaultTextStyle.merge(
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                    child: title,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DefaultTextStyle.merge(
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                        child: title,
+                      ),
+                      if (subtitle != null)
+                        DefaultTextStyle.merge(
+                          style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                          child: subtitle!,
+                        ),
+                    ],
                   ),
-                  if (subtitle != null)
-                    DefaultTextStyle.merge(
-                      style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-                      child: subtitle!,
-                    ),
-                ],
-              ),
+                ),
+                if (trailingTop != null)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DefaultTextStyle.merge(
+                        style: const TextStyle(fontSize: 14),
+                        child: trailingTop!,
+                      ),
+                      if (trailingBottom != null)
+                        DefaultTextStyle.merge(
+                          style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                          child: trailingBottom!,
+                        ),
+                    ],
+                  ),
+              ],
             ),
-            if (trailingTop != null)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DefaultTextStyle.merge(
-                    style: const TextStyle(fontSize: 14),
-                    child: trailingTop!,
-                  ),
-                  if (trailingBottom != null)
-                    DefaultTextStyle.merge(
-                      style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-                      child: trailingBottom!,
-                    ),
-                ],
+            if (footer != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: DefaultTextStyle.merge(
+                  style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                  child: footer!,
+                ),
               ),
           ],
         ),

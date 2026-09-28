@@ -27,9 +27,6 @@ Widget buildStockRow(BuildContext context, StockSummary r, ScopeFilter scope, {b
           nested: nested,
         ),
     title: Text('${r.code}  ${repo.nameOf(r.code)}'),
-    subtitle: Text(r.isClosed
-        ? '已出清'
-        : '${shareTxt(r.shares)} · 均價 ${f2(r.avgCost)} · 成本 ${f0(r.cost)}'),
     trailingTop: q == null
         ? const Text('—')
         : Text.rich(TextSpan(children: [
@@ -43,6 +40,9 @@ Widget buildStockRow(BuildContext context, StockSummary r, ScopeFilter scope, {b
       r.isClosed ? '已實現 ${fp(pl)}' : '${fp(pl)} (${pct(pl, r.cost)})',
       style: TextStyle(color: changeColor(context, pl)),
     ),
+    footer: Text(r.isClosed
+        ? '已出清'
+        : '${shareTxt(r.shares)} · 均價 ${f2(r.avgCost)} · 成本 ${f0(r.cost)}'),
   );
 }
 
