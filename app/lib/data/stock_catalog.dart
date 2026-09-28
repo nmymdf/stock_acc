@@ -217,9 +217,10 @@ final Map<String, StockInfo> kBuiltinStocksByCode = {
 
 /// 查代號或名稱關鍵字（找開頭符合代號，或名稱包含關鍵字的股票）。
 List<StockInfo> searchStocks(String query) {
-  final q = query.trim();
+  // 代號比對不分大小寫：00679B 這種代號，打小寫 00679b 也要查得到。
+  final q = query.trim().toUpperCase();
   if (q.isEmpty) return const [];
   return kBuiltinStocksByCode.values
-      .where((s) => s.code.startsWith(q) || s.name.contains(q))
+      .where((s) => s.code.startsWith(q) || s.name.contains(query.trim()))
       .toList();
 }

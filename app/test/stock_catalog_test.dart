@@ -18,4 +18,9 @@ void main() {
     expect(searchStocks('美债').map((s) => s.code), contains('00679B'));
     expect(searchStocks(''), isEmpty);
   });
+
+  test('searchStocks 查代號不分大小寫（00679B 打小寫 00679b 也要查得到）', () {
+    expect(searchStocks('00679b').map((s) => s.code), contains('00679B'));
+    expect(searchStocks('0055').map((s) => s.code), contains('0055'));
+  });
 }

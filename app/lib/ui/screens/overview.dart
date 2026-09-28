@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../data/repository.dart';
 import '../../logic/stats.dart';
+import '../app_version.dart';
 import '../format.dart';
 import '../shell.dart';
 import '../theme.dart';
@@ -21,6 +22,7 @@ class OverviewScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = context.watch<AppRepository>();
     final shell = context.watch<ShellController>();
+    final version = context.watch<AppVersion>();
     final totals = repo.totalsFor(const ScopeFilter.all());
 
     return Scaffold(
@@ -31,8 +33,8 @@ class OverviewScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          const Text('作者：ArchieKuo',
-              style: TextStyle(fontStyle: FontStyle.italic, fontSize: 12, color: Colors.grey)),
+          Text('作者：ArchieKuo${version.label.isEmpty ? '' : ' · ${version.label}'}',
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12, color: Colors.grey)),
           const SizedBox(height: 8),
           HeroTotalsCard(
             label: '全部人合計 · 總市值',
