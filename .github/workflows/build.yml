@@ -1,0 +1,74 @@
+name: 編譯 Windows / Android
+
+# 這個環境沒有 Android SDK、也沒有 Windows，所以編譯交給 GitHub Actions：
+# 每次 push 或手動觸發，就用 GitHub 提供的真正 Windows / Android 環境編譯，
+# 編好的安裝檔會出現在這次執行的 Artifacts 裡，下載下來就能安裝、測試。
+on:
+  push:
+    paths:
+      - "app/**"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: "3.47.5"
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - run: flutter pub get
+        working-directory: app
+      - run: flutter analyze
+        working-directory: app
+      - run: flutter test
+        working-directory: app
+
+  build-windows:
+    needs: analyze-and-test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - run: flutter config --enable-windows-desktop
+      - run: flutter pub get
+        working-directory: app
+      - run: flutter build windows --release
+        working-directory: app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stock_acc-windows
+          path: app/build/windows/x64/runner/Release/**
+
+  build-android:
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+      - run: flutter pub get
+        working-directory: app
+      # 沒有另外設定簽章金鑰，會用 debug 金鑰簽 release 版——這支 App 給自己
+      # 和家人裝，不上架 Play 商店，這樣就能裝在手機上，之後真的要上架再換成
+      # 正式金鑰。
+      - run: flutter build apk --release
+        working-directory: app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stock_acc-android
+          path: app/build/app/outputs/flutter-apk/app-release.apk
