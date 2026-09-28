@@ -57,7 +57,8 @@ class NewsListRoute extends DetailRoute {
 class TradeFormRoute extends DetailRoute {
   final String? tradeId;
   final String? presetCode;
-  const TradeFormRoute({this.tradeId, this.presetCode});
+  final String? presetAccountId;
+  const TradeFormRoute({this.tradeId, this.presetCode, this.presetAccountId});
 }
 
 class SearchRoute extends DetailRoute {
@@ -250,7 +251,7 @@ class DetailScaffold extends StatelessWidget {
       PersonRoute r => PersonDetail(personId: r.personId),
       StockRoute r => StockDetail(code: r.code, scope: r.scope),
       NewsListRoute r => NewsListDetail(code: r.code),
-      TradeFormRoute r => TradeFormDetail(tradeId: r.tradeId, presetCode: r.presetCode),
+      TradeFormRoute r => TradeFormDetail(tradeId: r.tradeId, presetCode: r.presetCode, presetAccountId: r.presetAccountId),
       SearchRoute r => SearchDetail(forWatch: r.forWatch),
     };
     if (!embedded) {

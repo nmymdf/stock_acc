@@ -156,21 +156,33 @@ class StockDetail extends StatelessWidget {
           Card(
             child: Padding(
               padding: const EdgeInsets.all(14),
-              child: Column(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${repo.marketOf(code)} · 現價', style: Theme.of(context).textTheme.bodySmall),
-                  const SizedBox(height: 4),
-                  q == null
-                      ? const Text('尚無現價，按「更新」抓取')
-                      : Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-                          Text(f2(q.price), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600)),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${q.change > 0 ? '▲' : q.change < 0 ? '▼' : ''}${f2(q.change.abs())} (${pct(q.change, q.price - q.change)})',
-                            style: TextStyle(color: changeColor(context, q.change)),
-                          ),
-                        ]),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('${repo.marketOf(code)} · 現價', style: Theme.of(context).textTheme.bodySmall),
+                        const SizedBox(height: 4),
+                        q == null
+                            ? const Text('尚無現價，按「更新」抓取，或自己輸入')
+                            : Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+                                Text(f2(q.price), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600)),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${q.change > 0 ? '▲' : q.change < 0 ? '▼' : ''}${f2(q.change.abs())} (${pct(q.change, q.price - q.change)})',
+                                  style: TextStyle(color: changeColor(context, q.change)),
+                                ),
+                              ]),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined),
+                    tooltip: '手動輸入現價',
+                    onPressed: () => _editPriceDialog(context, code, q?.price),
+                  ),
                 ],
               ),
             ),
@@ -229,4 +241,34 @@ class StockDetail extends StatelessWidget {
 
 extension _FirstOrNull<T> on Iterable<T> {
   T? get firstOrNull => isEmpty ? null : first;
+}
+
+/// 抓不到即時股價時（例如冷門的債券型 ETF），可以自己輸入現價，
+/// 一樣拿來算市值和未實現損益。
+Future<void> _editPriceDialog(BuildContext context, String code, double? current) async {
+  final ctrl = TextEditingController(text: current == null ? '' : f2(current));
+  final repo = context.read<AppRepository>();
+  final price = await showDialog<double>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('$code ${repo.nameOf(code)} 現價'),
+      content: TextField(
+        controller: ctrl,
+        autofocus: true,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: const InputDecoration(labelText: '現價'),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, double.tryParse(ctrl.text)),
+          child: const Text('儲存'),
+        ),
+      ],
+    ),
+  );
+  if (price != null && price > 0) {
+    final change = current == null ? 0.0 : price - current;
+    await repo.setQuote(code, price, change: change);
+  }
 }

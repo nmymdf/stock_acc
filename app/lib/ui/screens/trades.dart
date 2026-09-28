@@ -69,7 +69,10 @@ class _TradesScreenState extends State<TradesScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('交易紀錄')),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.read<ShellController>().open(context, const TradeFormRoute()),
+        onPressed: () => context.read<ShellController>().open(
+              context,
+              TradeFormRoute(presetAccountId: _defaultAccountIdForNewTrade(repo)),
+            ),
         child: const Icon(Icons.add),
       ),
       body: ListView(
@@ -145,12 +148,25 @@ class _TradesScreenState extends State<TradesScreen> {
   }
 
   String _ym(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}';
+
+  /// 按「＋新增」時要預設哪個帳戶：篩選到特定帳戶就用那個帳戶；只篩選到人就用
+  /// 那個人的第一個帳戶；沒有篩選（全部）才用整體第一個帳戶。避免像 bug 那樣，
+  /// 明明篩選著「J - 新光」，新增卻預設跳到完全不相關的帳戶。
+  String? _defaultAccountIdForNewTrade(AppRepository repo) {
+    if (_accountId != null) return _accountId;
+    if (_personId != null) {
+      final accs = repo.accountsOf(_personId!);
+      if (accs.isNotEmpty) return accs.first.id;
+    }
+    return null;
+  }
 }
 
 class TradeFormDetail extends StatefulWidget {
   final String? tradeId;
   final String? presetCode;
-  const TradeFormDetail({super.key, this.tradeId, this.presetCode});
+  final String? presetAccountId;
+  const TradeFormDetail({super.key, this.tradeId, this.presetCode, this.presetAccountId});
 
   @override
   State<TradeFormDetail> createState() => _TradeFormDetailState();
@@ -176,7 +192,7 @@ class _TradeFormDetailState extends State<TradeFormDetail> {
   void initState() {
     super.initState();
     final t = _existing;
-    _accountId = t?.accountId;
+    _accountId = t?.accountId ?? widget.presetAccountId;
     _side = t?.side ?? TradeSide.buy;
     _codeCtrl = TextEditingController(text: t?.code ?? widget.presetCode ?? '');
     _sharesCtrl = TextEditingController(text: t == null ? '' : t.shares.toString());
