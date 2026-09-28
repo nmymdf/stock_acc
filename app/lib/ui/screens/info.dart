@@ -49,7 +49,7 @@ class _InfoScreenState extends State<InfoScreen> {
           : (sources.isEmpty ? '沒有新聞' : (sources.length > 2 ? '${sources.take(2).join('、')} 等 ${sources.length} 家' : sources.join('、')));
       return InfoRow(
         onTap: () => context.read<ShellController>().open(context, NewsListRoute(code)),
-        title: Text('${code}  ${repo.nameOf(code)}'),
+        title: Text('$code  ${repo.nameOf(code)}'),
         subtitle: Text(srcText),
         trailingTop: n == null ? const Text('—') : Text('$n 則'),
       );
@@ -106,7 +106,7 @@ class _InfoScreenState extends State<InfoScreen> {
             ),
           ]),
           SectionHeader(left: '持有中 ${held.length} 檔', right: '新聞數 / 來源'),
-          RowList(children: [for (final c in held) row(c)], emptyText: '還沒有持股'),
+          RowList(emptyText: '還沒有持股', children: [for (final c in held) row(c)]),
           Padding(
             padding: const EdgeInsets.fromLTRB(6, 10, 6, 2),
             child: Row(children: [
@@ -114,7 +114,7 @@ class _InfoScreenState extends State<InfoScreen> {
               const SearchButton(forWatch: true),
             ]),
           ),
-          RowList(children: [for (final c in watch) row(c)], emptyText: '還沒有關注的股票，按「＋ 加入」'),
+          RowList(emptyText: '還沒有關注的股票，按「＋ 加入」', children: [for (final c in watch) row(c)]),
           const Padding(
             padding: EdgeInsets.all(10),
             child: Text('關注清單全部人共用。買進後會自動出現在「持有中」。',
@@ -156,6 +156,7 @@ class NewsPreview extends StatelessWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       SectionHeader(left: '最新新聞', right: '近 7 天 ${clusterNews(items, merge: repo.mergeNews).length} 則'),
       RowList(
+        emptyText: '這段期間沒有新聞',
         children: [
           for (final c in clusters) NewsClusterTile(cluster: c, merge: repo.mergeNews),
           InfoRow(
@@ -163,7 +164,6 @@ class NewsPreview extends StatelessWidget {
             title: const Text('看更多新聞', style: TextStyle(color: Colors.teal)),
           ),
         ],
-        emptyText: '這段期間沒有新聞',
       ),
     ]);
   }
@@ -221,8 +221,8 @@ class _NewsListDetailState extends State<NewsListDetail> {
             const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
           else
             RowList(
-              children: [for (final c in clusters) NewsClusterTile(cluster: c, merge: repo.mergeNews, expanded: true)],
               emptyText: '這段期間沒有新聞，或抓取失敗（需要網路連線）',
+              children: [for (final c in clusters) NewsClusterTile(cluster: c, merge: repo.mergeNews, expanded: true)],
             ),
           const SizedBox(height: 12),
           OutlinedButton(

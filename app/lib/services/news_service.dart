@@ -60,7 +60,7 @@ class NewsService {
     }
   }
 
-  /// 簡單的 RSS <item> 解析，只取用得到的 4 個欄位，不依賴額外的 XML 套件。
+  /// 簡單的 RSS `<item>` 解析，只取用得到的 4 個欄位，不依賴額外的 XML 套件。
   List<NewsItem> _parseRssItems(String xml) {
     final items = <NewsItem>[];
     for (final m in RegExp(r'<item>(.*?)</item>', dotAll: true).allMatches(xml)) {

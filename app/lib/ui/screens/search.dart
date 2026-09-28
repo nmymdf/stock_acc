@@ -96,10 +96,10 @@ class _SearchDetailState extends State<SearchDetail> {
           const SizedBox(height: 8),
           if (query.isNotEmpty) ...[
             SectionHeader(left: '搜尋結果 ${hits.length} 筆'),
-            RowList(children: [for (final s in hits) row(s)], emptyText: '找不到符合的股票'),
+            RowList(emptyText: '找不到符合的股票', children: [for (final s in hits) row(s)]),
           ] else ...[
             const SectionHeader(left: '目前持有'),
-            RowList(children: [for (final s in recent) row(s)], emptyText: '輸入代號或名稱開始查詢'),
+            RowList(emptyText: '輸入代號或名稱開始查詢', children: [for (final s in recent) row(s)]),
           ],
         ],
       ),

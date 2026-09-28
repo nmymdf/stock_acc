@@ -16,7 +16,7 @@ String fp(num n) => (n > 0 ? '+' : '') + f0(n);
 String pct(num a, num b) {
   if (b == 0) return '—';
   final v = a / b * 100;
-  return (v > 0 ? '+' : '') + v.toStringAsFixed(2) + '%';
+  return '${v > 0 ? '+' : ''}${v.toStringAsFixed(2)}%';
 }
 
 /// 1000 股的倍數顯示成「N 張」，否則顯示「N 股」。

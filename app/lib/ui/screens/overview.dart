@@ -127,6 +127,7 @@ class PersonDetail extends StatelessWidget {
               final rows = repo.summarize(scope);
               final t = totalsOf(rows);
               return RowList(
+                emptyText: '這個帳戶還沒有任何交易',
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -142,7 +143,6 @@ class PersonDetail extends StatelessWidget {
                   ),
                   for (final r in rows) buildStockRow(context, r, scope),
                 ],
-                emptyText: '這個帳戶還沒有任何交易',
               );
             }),
             const SizedBox(height: 6),

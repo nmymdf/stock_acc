@@ -111,7 +111,7 @@ class _HoldingsScreenState extends State<HoldingsScreen> {
             ('已實現', fp(totals.realized), changeColor(context, totals.realized)),
           ]),
           SectionHeader(left: '持有中 ${held.length} 檔 · 點股票看交易明細', right: '現價 / 損益'),
-          RowList(children: [for (final r in held) buildStockRow(context, r, scope)], emptyText: '沒有持股'),
+          RowList(emptyText: '沒有持股', children: [for (final r in held) buildStockRow(context, r, scope)]),
           if (closed.isNotEmpty) ...[
             const SectionHeader(left: '已出清'),
             RowList(children: [for (final r in closed) buildStockRow(context, r, scope)]),
@@ -194,7 +194,7 @@ class StockDetail extends StatelessWidget {
                   final un = q == null || p.shares == 0 ? 0.0 : p.shares * q.price - p.cost;
                   final pl = un + p.realized;
                   return InfoRow(
-                    title: Text('${person?.name ?? '（已刪除）'}'),
+                    title: Text(person?.name ?? '（已刪除）'),
                     subtitle: Text(acc?.broker ?? ''),
                     trailingTop: Text(fp(pl), style: TextStyle(color: changeColor(context, pl))),
                     trailingBottom: Text(p.shares > 0 ? '${shareTxt(p.shares)} · 均價 ${f2(p.avgCost)}' : '已出清'),
@@ -202,7 +202,7 @@ class StockDetail extends StatelessWidget {
                 }),
             ]),
             SectionHeader(left: '交易明細 ${trades.length} 筆（點一下可修改）'),
-            RowList(children: [for (final t in trades) buildTradeRow(context, t, nested: true)], emptyText: '沒有交易'),
+            RowList(emptyText: '沒有交易', children: [for (final t in trades) buildTradeRow(context, t, nested: true)]),
           ] else
             Padding(
               padding: const EdgeInsets.all(16),
