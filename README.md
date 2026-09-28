@@ -41,6 +41,31 @@ flutter test      # 手續費、統計、新聞合併邏輯的單元測試，全
 flutter build linux --debug   # 驗證程式碼能真的編譯、啟動，不會一開就當掉
 ```
 
+### Android 更新保留資料（設定一次就好）
+
+Windows 版更新只要把 `.exe` 換掉，資料在另一個地方，不會受影響。Android 不一樣：
+沒設定簽章金鑰的話，GitHub 每次編譯都會用一把**新產生**的金鑰簽名，Android 會
+認為是不同的 App，安裝新版前要先移除舊版，資料就會被清掉。
+
+設定一次固定金鑰，之後每次更新才能直接蓋掉舊版、保留資料：
+
+1. 到 repo 的 **Actions** 分頁，找到「**產生 Android 簽章金鑰**」這個
+   workflow，右上角 **Run workflow** 手動觸發一次。金鑰是在 GitHub 的伺服器上
+   產生的，不會經過任何人的電腦。
+2. 跑完之後，下面 Artifacts 有一個檔案，下載解壓縮，裡面 `設定步驟.txt` 有
+   完整的操作說明；簡單說就是把裡面 4 行資料，分別新增成 repo 的 4 個
+   Secrets（**Settings → Secrets and variables → Actions → New repository
+   secret**）：`ANDROID_KEYSTORE_BASE64`、`ANDROID_KEYSTORE_PASSWORD`、
+   `ANDROID_KEY_ALIAS`、`ANDROID_KEY_PASSWORD`。
+3. 設定完之後，把「產生 Android 簽章金鑰」那次執行紀錄刪掉（右上角 ··· →
+   Delete workflow run），電腦上下載的壓縮檔也刪掉。
+4. 重新觸發一次「編譯 Windows / Android」，之後編出來的 apk 才會用這把固定的
+   金鑰簽名。**這一版之前裝的 apk 因為金鑰不同，換這一版是最後一次要先移除
+   舊版重裝**；之後每次更新都能直接蓋掉安裝，資料保留。
+
+還沒設定這 4 個 Secrets 之前，App 一樣能正常編譯、正常使用，只是每次更新都要
+先移除舊版。
+
 ## 架構
 
 ```

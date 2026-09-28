@@ -29,11 +29,31 @@ android {
         versionName = flutter.versionName
     }
 
+    // 固定的簽章金鑰：讓每次 GitHub Actions 編出來的 APK 都用「同一把鑰匙」簽名，
+    // 這樣新版 apk 才能直接蓋掉舊版安裝、保留資料，不用每次都先移除舊版重裝。
+    // 如果每次編譯用不同的鑰匙，Android 會認為是不同的 App，逼你先移除舊版才能
+    // 裝新版，資料就會被清掉。
+    //
+    // 金鑰檔本身不放進 repo，是透過 GitHub Actions 的 Secrets 在編譯時解碼出來
+    // （見 .github/workflows/build.yml 和 gen-keystore.yml，以及 README 的說明）。
+    // 這裡在本機（或還沒設定 Secrets 時）找不到金鑰檔，就自動退回用 debug 金鑰簽，
+    // 不會讓建置失敗。
+    val releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+    val hasReleaseKeystore = releaseKeystorePath != null && file(releaseKeystorePath).exists()
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                storeFile = file(releaseKeystorePath!!)
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (hasReleaseKeystore) "release" else "debug")
         }
     }
 }
