@@ -1,5 +1,8 @@
-/// 抓證交所的即時股價（基本市況報導 API）。免費、不用帳號，
-/// 但不是正式公開的 API，格式偶爾可能會變，抓失敗時要能安靜地失敗。
+/// 抓證交所的股價，有兩層來源：
+/// 1. 「基本市況報導」即時報價——免費不用帳號，但不是正式公開的 API，
+///    對某些商品（實測發現像 00679B 這種債券型 ETF）常常查不到即時欄位。
+/// 2. 查不到即時價的股票，改抓證交所**官方公開資料**的「每日收盤行情」
+///    當備援，抓不到即時價至少還能有當天（或最近一個交易日）的收盤價。
 library;
 
 import 'dart:convert';
@@ -29,13 +32,21 @@ class PriceService {
         i,
         i + _batchSize > codes.length ? codes.length : i + _batchSize,
       );
-      final part = await _fetchBatch(batch);
+      final part = await _fetchRealtimeBatch(batch);
       result.addAll(part);
+    }
+
+    // 即時來源沒抓到的股票，改抓官方每日收盤價當備援（目前只有上市，上櫃的
+    // 官方公開資料格式不同，之後有需要再補）。
+    final missing = codes.where((c) => !result.containsKey(c)).toList();
+    if (missing.isNotEmpty) {
+      final fallback = await _fetchDailyCloseFallback(missing);
+      result.addAll(fallback);
     }
     return result;
   }
 
-  Future<Map<String, PriceResult>> _fetchBatch(List<String> codes) async {
+  Future<Map<String, PriceResult>> _fetchRealtimeBatch(List<String> codes) async {
     // 上市用 tse_ 前綴、上櫃用 otc_，兩種都查一次比較保險（查錯市場證交所會回空值）。
     final exCh = codes
         .map((c) {
@@ -75,5 +86,38 @@ class PriceService {
       // 沒有網路、逾時、證交所格式變了……都當作「這次抓不到」，讓呼叫端保留舊資料。
       return {};
     }
+  }
+
+  /// 證交所官方的「每日收盤行情」公開資料（含個股和 ETF），一次回傳當天所有
+  /// 上市證券。只在即時來源查不到某支股票時才當備援抓，不是每次都抓整包。
+  Future<Map<String, PriceResult>> _fetchDailyCloseFallback(List<String> codes) async {
+    final tseCodes = codes.where((c) => kBuiltinStocksByCode[c]?.market != '上櫃').toSet();
+    if (tseCodes.isEmpty) return {};
+    final uri = Uri.https('openapi.twse.com.tw', '/v1/exchangeReport/STOCK_DAY_ALL');
+    try {
+      final res = await http
+          .get(uri, headers: const {'Accept': 'application/json'})
+          .timeout(const Duration(seconds: 12));
+      if (res.statusCode != 200) return {};
+      final list = jsonDecode(res.body) as List;
+      final out = <String, PriceResult>{};
+      for (final raw in list) {
+        final row = raw as Map<String, dynamic>;
+        final code = row['Code'] as String?;
+        if (code == null || !tseCodes.contains(code)) continue;
+        final close = _num(row['ClosingPrice']);
+        if (close == null) continue;
+        out[code] = PriceResult(code, close, _num(row['Change']) ?? 0);
+      }
+      return out;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  double? _num(dynamic v) {
+    if (v == null) return null;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString().replaceAll(',', ''));
   }
 }
