@@ -179,7 +179,16 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
-    if (name != null && name.isNotEmpty) await repo.addGroup(name);
+    if (name == null) return; // 按了「取消」
+    if (name.isEmpty) {
+      // 沒打名稱就按「新增並切換」：以前這裡是靜默不做事，使用者會以為
+      // 已經新增成功、回頭卻看不到新群體。改成明確告知沒有新增。
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('沒有輸入名稱，沒有新增群體')));
+      }
+      return;
+    }
+    await repo.addGroup(name);
   }
 
   Future<void> _renameGroupDialog(BuildContext context, AppRepository repo, GroupInfo g) async {
