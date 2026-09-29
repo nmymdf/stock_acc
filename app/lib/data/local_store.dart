@@ -28,6 +28,9 @@ class LocalStore {
     return dir;
   }
 
+  /// 資料實際存放的資料夾路徑，給設定頁顯示，方便使用者自己去該資料夾核對檔案。
+  Future<String> dirPath() async => (await _dir()).path;
+
   Future<Map<String, dynamic>?> readNamed(String fileName) async {
     final dir = await _dir();
     final f = File('${dir.path}/$fileName');

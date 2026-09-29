@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/group_store.dart';
@@ -121,6 +122,33 @@ class SettingsScreen extends StatelessWidget {
                 subtitle: const Text('選擇備份檔，整包取代目前的資料'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => _importBackup(context, repo),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                title: const Text('資料存放的資料夾'),
+                subtitle: Text(repo.storageDirPath.isEmpty ? '讀取中…' : repo.storageDirPath),
+                trailing: const Icon(Icons.copy, size: 18),
+                onTap: () async {
+                  await Clipboard.setData(ClipboardData(text: repo.storageDirPath));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已複製資料夾路徑')));
+                  }
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                title: const Text('目前群體清單（除錯用）'),
+                subtitle: Text(repo.groups.map((g) => '${g.name}（${g.id.substring(0, 8)}…）').join('\n')),
+                trailing: const Icon(Icons.copy, size: 18),
+                onTap: () async {
+                  final text =
+                      '資料夾：${repo.storageDirPath}\n目前群體（${repo.groups.length} 個，使用中：${repo.activeGroupName}）：\n'
+                      '${repo.groups.map((g) => '- ${g.name}　${g.id}').join('\n')}';
+                  await Clipboard.setData(ClipboardData(text: text));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已複製群體清單，貼給我看')));
+                  }
+                },
               ),
             ]),
           ),

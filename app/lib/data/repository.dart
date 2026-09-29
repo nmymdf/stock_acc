@@ -36,6 +36,9 @@ class AppRepository extends ChangeNotifier {
   GroupRegistry _registry = GroupRegistry(groups: [], activeId: '');
   bool loaded = false;
 
+  /// 資料實際存放的資料夾路徑，設定頁顯示用（方便使用者自己去對照檔案）。
+  String storageDirPath = '';
+
   AppData get data => _data;
 
   // ---------------- 群體（完全獨立的資料） ----------------
@@ -46,6 +49,7 @@ class AppRepository extends ChangeNotifier {
       _registry.groups.where((g) => g.id == _registry.activeId).firstOrNull?.name ?? '';
 
   Future<void> load() async {
+    storageDirPath = await _store.dirPath();
     var registryJson = await _store.readNamed(LocalStore.groupsFileName);
     if (registryJson == null) {
       // 第一次用這個版本：把舊版唯一的那份資料（如果有）搬進「預設」群體，
