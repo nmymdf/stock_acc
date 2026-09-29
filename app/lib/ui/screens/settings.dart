@@ -111,17 +111,31 @@ class SettingsScreen extends StatelessWidget {
           Card(
             child: Column(children: [
               ListTile(
-                title: const Text('匯出備份'),
-                subtitle: const Text('存成一個檔案，換裝置時用來匯入'),
+                title: const Text('匯出備份（目前這個群體）'),
+                subtitle: const Text('只匯出目前群體的資料，換裝置時用來匯入'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => _exportBackup(context, repo),
               ),
               const Divider(height: 1),
               ListTile(
-                title: const Text('匯入備份'),
-                subtitle: const Text('選擇備份檔，整包取代目前的資料'),
+                title: const Text('匯入備份（目前這個群體）'),
+                subtitle: const Text('選擇備份檔，整包取代目前群體的資料'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => _importBackup(context, repo),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                title: const Text('匯出全部群體備份'),
+                subtitle: Text('把全部 ${repo.groups.length} 個群體一次匯出成一個檔案，換裝置時一次匯入'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _exportAllGroupsBackup(context, repo),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                title: const Text('匯入全部群體備份'),
+                subtitle: const Text('選擇「匯出全部群體備份」存的檔案，備份裡的群體都會建立或覆蓋，本機原有、備份裡沒有的群體不受影響'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _importAllGroupsBackup(context, repo),
               ),
               const Divider(height: 1),
               ListTile(
@@ -365,6 +379,55 @@ class SettingsScreen extends StatelessWidget {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('這個檔案看起來不是有效的備份檔')));
+      }
+    }
+  }
+
+  Future<void> _exportAllGroupsBackup(BuildContext context, AppRepository repo) async {
+    final data = await repo.exportAllGroups();
+    final json = const JsonEncoder.withIndent('  ').convert(data);
+    final bytes = utf8.encode(json);
+    final stamp = DateTime.now().toIso8601String().replaceAll(RegExp(r'[:.]'), '-');
+    final location = await getSaveLocation(
+      suggestedName: 'stock_acc_all_groups_$stamp.json',
+      acceptedTypeGroups: const [XTypeGroup(label: 'JSON', extensions: ['json'])],
+    );
+    if (location == null) return;
+    final file = XFile.fromData(bytes, mimeType: 'application/json', name: 'backup.json');
+    await file.saveTo(location.path);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已匯出全部群體備份')));
+    }
+  }
+
+  Future<void> _importAllGroupsBackup(BuildContext context, AppRepository repo) async {
+    final file = await openFile(
+      acceptedTypeGroups: const [XTypeGroup(label: 'JSON', extensions: ['json'])],
+    );
+    if (file == null) return;
+    if (!context.mounted) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('匯入全部群體備份？'),
+        content: const Text('備份裡的每個群體都會被建立（本機沒有的話）或覆蓋（本機已經有同一個群體的話），無法復原。本機原有、備份裡沒有的其他群體不受影響。'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('確定匯入')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      final text = await file.readAsString();
+      final json = jsonDecode(text) as Map<String, dynamic>;
+      await repo.importAllGroups(json);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已匯入全部群體備份')));
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('這個檔案看起來不是有效的「全部群體」備份檔')));
       }
     }
   }

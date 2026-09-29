@@ -130,6 +130,39 @@ class AppRepository extends ChangeNotifier {
     await _mutate(() => _data = AppData.fromJson(json));
   }
 
+  /// 匯出「所有群體」：群體清單 + 每個群體各自完整的記帳資料，換裝置時
+  /// 一次全部帶過去用（跟「匯出備份」不一樣，那個只匯出目前這一個群體）。
+  Future<Map<String, dynamic>> exportAllGroups() async {
+    final groupsData = <String, dynamic>{};
+    for (final g in _registry.groups) {
+      final json = g.id == _registry.activeId
+          ? _data.toJson()
+          : await _store.readNamed(LocalStore.dataFileNameFor(g.id));
+      groupsData[g.id] = json ?? AppData().toJson();
+    }
+    return {'registry': _registry.toJson(), 'groupsData': groupsData};
+  }
+
+  /// 匯入「所有群體」備份：備份裡的每個群體都會被建立（本機沒有的話）或
+  /// 覆蓋（本機已經有同一個群體 id 的話），不會刪掉匯入前本機已經有、
+  /// 但備份裡沒有的其他群體。匯入完自動切到備份原本使用中的那個群體。
+  Future<void> importAllGroups(Map<String, dynamic> json) async {
+    final backupRegistry = GroupRegistry.fromJson(json['registry'] as Map<String, dynamic>);
+    final groupsData = json['groupsData'] as Map<String, dynamic>;
+    for (final g in backupRegistry.groups) {
+      if (!_registry.groups.any((x) => x.id == g.id)) {
+        _registry.groups.add(GroupInfo(id: g.id, name: g.name, createdAt: g.createdAt));
+      }
+      final data = groupsData[g.id] as Map<String, dynamic>?;
+      await _store.writeNamed(LocalStore.dataFileNameFor(g.id), data ?? AppData().toJson());
+    }
+    await _saveRegistry();
+    final targetId = _registry.groups.any((g) => g.id == backupRegistry.activeId)
+        ? backupRegistry.activeId
+        : _registry.groups.first.id;
+    await switchGroup(targetId);
+  }
+
   Future<void> _mutate(void Function() change) async {
     change();
     notifyListeners();
