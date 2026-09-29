@@ -15,7 +15,7 @@ void main() {
 
   test('searchStocks 用代號開頭或名稱關鍵字都查得到', () {
     expect(searchStocks('00679').map((s) => s.code), contains('00679B'));
-    expect(searchStocks('美债').map((s) => s.code), contains('00679B'));
+    expect(searchStocks('美債').map((s) => s.code), contains('00679B'));
     expect(searchStocks(''), isEmpty);
   });
 
@@ -24,13 +24,11 @@ void main() {
     expect(searchStocks('0055').map((s) => s.code), contains('0055'));
   });
 
-  test('債券型 ETF（代號後面帶 B）歸類為上櫃，抓股價才會用對交易所前綴', () {
-    // 曾經誤標成「上市」，導致抓即時股價時用錯 tse_ 前綴查不到資料
-    // （Yahoo 股市這類代號的網址是 .TWO 結尾，TWO = 上櫃）。
-    for (final s in kBuiltinStocks) {
-      if (RegExp(r'\d+B$').hasMatch(s.code)) {
-        expect(s.market, '上櫃', reason: '${s.code}（${s.name}）應該是上櫃');
-      }
-    }
+  test('債券型 ETF 的市場別（上市／上櫃）要跟官方資料一致，抓股價才會用對交易所前綴', () {
+    // 曾經誤以為代號後面帶 B 的債券型 ETF 全部都是上櫃，其實是逐檔不同
+    // （00710B、00711B、00775B 是上市），不能用代號規則一律判斷。
+    expect(kBuiltinStocksByCode['00679B']?.market, '上櫃');
+    expect(kBuiltinStocksByCode['00710B']?.market, '上市');
+    expect(kBuiltinStocksByCode['00775B']?.market, '上市');
   });
 }
