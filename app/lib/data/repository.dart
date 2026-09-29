@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 import '../logic/stats.dart';
 import '../models/models.dart';
 import 'app_data.dart';
+import 'group_store.dart';
 import 'local_store.dart';
 import 'stock_catalog.dart';
 
@@ -32,23 +33,95 @@ class ScopeFilter {
 class AppRepository extends ChangeNotifier {
   final LocalStore _store = LocalStore();
   AppData _data = AppData();
+  GroupRegistry _registry = GroupRegistry(groups: [], activeId: '');
   bool loaded = false;
 
   AppData get data => _data;
 
+  // ---------------- 群體（完全獨立的資料） ----------------
+
+  List<GroupInfo> get groups => List.unmodifiable(_registry.groups);
+  String get activeGroupId => _registry.activeId;
+  String get activeGroupName =>
+      _registry.groups.where((g) => g.id == _registry.activeId).firstOrNull?.name ?? '';
+
   Future<void> load() async {
-    final json = await _store.read();
-    _data = json == null ? AppData.sample() : AppData.fromJson(json);
+    var registryJson = await _store.readNamed(LocalStore.groupsFileName);
+    if (registryJson == null) {
+      // 第一次用這個版本：把舊版唯一的那份資料（如果有）搬進「預設」群體，
+      // 沒有的話就是全新安裝，用範例資料開局。
+      final legacy = await _store.readNamed(LocalStore.legacyFileName);
+      final id = _uuid.v4();
+      _registry = GroupRegistry(
+        groups: [GroupInfo(id: id, name: '預設', createdAt: DateTime.now())],
+        activeId: id,
+      );
+      _data = legacy == null ? AppData.sample() : AppData.fromJson(legacy);
+      await _store.writeNamed(LocalStore.groupsFileName, _registry.toJson());
+      await _store.writeNamed(LocalStore.dataFileNameFor(id), _data.toJson());
+    } else {
+      _registry = GroupRegistry.fromJson(registryJson);
+      final dataJson = await _store.readNamed(LocalStore.dataFileNameFor(_registry.activeId));
+      _data = dataJson == null ? AppData.sample() : AppData.fromJson(dataJson);
+    }
     loaded = true;
     notifyListeners();
-    if (json == null) await _save(); // 第一次啟動，把範例資料落地存檔
   }
 
   Future<void> _save() async {
-    await _store.write(_data.toJson());
+    await _store.writeNamed(LocalStore.dataFileNameFor(_registry.activeId), _data.toJson());
   }
 
-  /// 匯入備份：整包取代目前的資料。
+  Future<void> _saveRegistry() async {
+    await _store.writeNamed(LocalStore.groupsFileName, _registry.toJson());
+  }
+
+  /// 新增一個完全獨立的群體，資料是空的（不是範例資料），並立刻切換過去。
+  Future<GroupInfo> addGroup(String name) async {
+    final g = GroupInfo(id: _uuid.v4(), name: name, createdAt: DateTime.now());
+    _registry.groups.add(g);
+    await _saveRegistry();
+    // 新群體先落地一份空白資料，切過去的時候才不會被 switchGroup 的
+    // 「找不到檔案就用範例資料」那條安全網誤判成要塞示範資料進來。
+    await _store.writeNamed(LocalStore.dataFileNameFor(g.id), AppData().toJson());
+    await switchGroup(g.id);
+    return g;
+  }
+
+  Future<void> renameGroup(String id, String name) async {
+    final g = _registry.groups.where((x) => x.id == id).firstOrNull;
+    if (g == null) return;
+    g.name = name;
+    await _saveRegistry();
+    notifyListeners();
+  }
+
+  /// 刪除一個群體，連同它的記帳資料一起刪除（無法復原）。至少要留一個群體。
+  Future<void> deleteGroup(String id) async {
+    if (_registry.groups.length <= 1) return;
+    final wasActive = _registry.activeId == id;
+    _registry.groups.removeWhere((g) => g.id == id);
+    await _store.deleteNamed(LocalStore.dataFileNameFor(id));
+    if (wasActive) {
+      await switchGroup(_registry.groups.first.id);
+    } else {
+      await _saveRegistry();
+    }
+  }
+
+  /// 切換到另一個群體：整個 App（總覽、持股、交易、關注清單……）都會變成
+  /// 那個群體的內容，跟現在這個完全獨立、不會混在一起算。
+  Future<void> switchGroup(String id) async {
+    if (!_registry.groups.any((g) => g.id == id)) return;
+    _registry.activeId = id;
+    await _saveRegistry();
+    final dataJson = await _store.readNamed(LocalStore.dataFileNameFor(id));
+    _data = dataJson == null ? AppData.sample() : AppData.fromJson(dataJson);
+    if (dataJson == null) await _save();
+    notifyListeners();
+  }
+
+  /// 匯入備份：整包取代「目前這個群體」的資料，不影響其他群體。
   Future<void> replaceAll(Map<String, dynamic> json) async {
     await _mutate(() => _data = AppData.fromJson(json));
   }

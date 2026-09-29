@@ -7,6 +7,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/group_store.dart';
 import '../../data/repository.dart';
 import '../../models/models.dart';
 import '../widgets/common.dart';
@@ -22,6 +23,43 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
+          const SectionHeader(left: '群體', right: '完全獨立的資料，互不相通'),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: Column(children: [
+              for (final g in repo.groups) ...[
+                if (g != repo.groups.first) const Divider(height: 1),
+                ListTile(
+                  leading: Icon(
+                    g.id == repo.activeGroupId ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                    color: g.id == repo.activeGroupId ? Theme.of(context).colorScheme.primary : null,
+                  ),
+                  title: Text(g.name, style: TextStyle(fontWeight: g.id == repo.activeGroupId ? FontWeight.w700 : FontWeight.w400)),
+                  subtitle: g.id == repo.activeGroupId ? const Text('目前使用中') : null,
+                  onTap: g.id == repo.activeGroupId ? null : () => repo.switchGroup(g.id),
+                  trailing: PopupMenuButton<String>(
+                    onSelected: (v) {
+                      if (v == 'rename') _renameGroupDialog(context, repo, g);
+                      if (v == 'delete') _confirmDeleteGroup(context, repo, g);
+                    },
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(value: 'rename', child: Text('修改群體名稱')),
+                      PopupMenuItem(
+                        value: 'delete',
+                        enabled: repo.groups.length > 1,
+                        child: const Text('刪除這個群體'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              ListTile(
+                leading: const Icon(Icons.add, color: Colors.teal),
+                title: const Text('新增群體', style: TextStyle(color: Colors.teal)),
+                onTap: () => _addGroupDialog(context, repo),
+              ),
+            ]),
+          ),
           const SectionHeader(left: '戶名與券商帳戶'),
           for (final p in repo.persons)
             Card(
@@ -94,6 +132,62 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _addGroupDialog(BuildContext context, AppRepository repo) async {
+    final ctrl = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('新增群體'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: '群體名稱', hintText: '例如：幫朋友代操'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.pop(context, ctrl.text.trim()), child: const Text('新增並切換')),
+        ],
+      ),
+    );
+    if (name != null && name.isNotEmpty) await repo.addGroup(name);
+  }
+
+  Future<void> _renameGroupDialog(BuildContext context, AppRepository repo, GroupInfo g) async {
+    final ctrl = TextEditingController(text: g.name);
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('修改群體名稱'),
+        content: TextField(controller: ctrl, autofocus: true, decoration: const InputDecoration(labelText: '群體名稱')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.pop(context, ctrl.text.trim()), child: const Text('儲存')),
+        ],
+      ),
+    );
+    if (name != null && name.isNotEmpty) await repo.renameGroup(g.id, name);
+  }
+
+  Future<void> _confirmDeleteGroup(BuildContext context, AppRepository repo, GroupInfo g) async {
+    if (repo.groups.length <= 1) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('刪除群體「${g.name}」？'),
+        content: const Text('這個群體裡的所有戶名、帳戶、交易紀錄都會一起刪除，無法復原。'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('確定刪除'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) await repo.deleteGroup(g.id);
   }
 
   Future<void> _addPersonDialog(BuildContext context, AppRepository repo) async {

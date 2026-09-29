@@ -32,11 +32,31 @@ class OverviewScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          Text('作者：ArchieKuo · $kAppVersion',
-              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12, color: Colors.grey)),
+          Row(
+            children: [
+              Expanded(
+                child: Text('作者：ArchieKuo · $kAppVersion',
+                    style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12, color: Colors.grey)),
+              ),
+              InkWell(
+                onTap: () => _switchGroupDialog(context, repo),
+                borderRadius: BorderRadius.circular(6),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.folder_outlined, size: 14, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 4),
+                    Text('群體：${repo.activeGroupName}',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.primary)),
+                    Icon(Icons.arrow_drop_down, size: 16, color: Theme.of(context).colorScheme.primary),
+                  ]),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
           HeroTotalsCard(
-            label: '全部人合計 · 總市值',
+            label: '${repo.activeGroupName} · 全部人合計 · 總市值',
             big: '\$${f0(totals.marketValue)}',
             stats: [
               ('總成本', f0(totals.cost), null),
@@ -154,4 +174,45 @@ class PersonDetail extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 群體快速切換：點總覽頁右上角的「群體：xxx」跳出這個清單，選了立刻整個
+/// App 切換過去；想管理（改名、刪除）要到設定頁。
+Future<void> _switchGroupDialog(BuildContext context, AppRepository repo) async {
+  final selected = await showDialog<String>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: const Text('切換群體'),
+      children: [
+        for (final g in repo.groups)
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, g.id),
+            child: Row(children: [
+              Icon(
+                g.id == repo.activeGroupId ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                size: 18,
+                color: g.id == repo.activeGroupId ? Theme.of(context).colorScheme.primary : null,
+              ),
+              const SizedBox(width: 10),
+              Text(g.name, style: TextStyle(fontWeight: g.id == repo.activeGroupId ? FontWeight.w700 : FontWeight.w400)),
+            ]),
+          ),
+        const Divider(height: 1),
+        SimpleDialogOption(
+          onPressed: () => Navigator.pop(context, '__manage__'),
+          child: const Row(children: [
+            Icon(Icons.settings_outlined, size: 18, color: Colors.teal),
+            SizedBox(width: 10),
+            Text('新增／管理群體…', style: TextStyle(color: Colors.teal)),
+          ]),
+        ),
+      ],
+    ),
+  );
+  if (selected == null) return;
+  if (selected == '__manage__') {
+    if (context.mounted) context.read<ShellController>().switchTab(AppTab.settings);
+    return;
+  }
+  await repo.switchGroup(selected);
 }
