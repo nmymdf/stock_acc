@@ -19,6 +19,30 @@ class PriceResult {
   const PriceResult(this.code, this.price, this.change);
 }
 
+/// 「選股雷達」用的完整當日報價：比 [PriceResult] 多開盤/最高/最低/成交量，
+/// 用來算漲跌幅、量能、離今天高點的距離這些排序依據。
+class ScreenerQuote {
+  final String code;
+  final double price;
+  final double prevClose;
+  final double open;
+  final double high;
+  final double low;
+  final int volumeLots; // 成交量，單位：張
+
+  const ScreenerQuote({
+    required this.code,
+    required this.price,
+    required this.prevClose,
+    required this.open,
+    required this.high,
+    required this.low,
+    required this.volumeLots,
+  });
+
+  double get changePct => prevClose == 0 ? 0 : (price - prevClose) / prevClose * 100;
+}
+
 class PriceService {
   /// 一次最多查幾支，太多的話分批查詢，避免單一請求太長被拒。
   static const _batchSize = 30;
@@ -44,6 +68,66 @@ class PriceService {
       result.addAll(fallback);
     }
     return result;
+  }
+
+  /// 「選股雷達」專用：查一批代號當天完整的開高低量，查不到、逾時的股票
+  /// 直接跳過（回傳的清單可能比要求的代號少），不影響其他候選股。
+  Future<List<ScreenerQuote>> fetchScreenerQuotes(List<String> codes) async {
+    final out = <ScreenerQuote>[];
+    for (var i = 0; i < codes.length; i += _batchSize) {
+      final batch = codes.sublist(
+        i,
+        i + _batchSize > codes.length ? codes.length : i + _batchSize,
+      );
+      out.addAll(await _fetchScreenerBatch(batch));
+    }
+    return out;
+  }
+
+  Future<List<ScreenerQuote>> _fetchScreenerBatch(List<String> codes) async {
+    final exCh = codes
+        .map((c) {
+          final market = kBuiltinStocksByCode[c]?.market;
+          final prefix = market == '上櫃' ? 'otc' : 'tse';
+          return '${prefix}_$c.tw';
+        })
+        .join('|');
+    final uri = Uri.https(
+      'mis.twse.com.tw',
+      '/stock/api/getStockInfo.jsp',
+      {'ex_ch': exCh, 'json': '1', 'delay': '0'},
+    );
+    try {
+      final res = await http
+          .get(uri, headers: const {'Accept': 'application/json'})
+          .timeout(const Duration(seconds: 8));
+      if (res.statusCode != 200) return const [];
+      final body = jsonDecode(res.body) as Map<String, dynamic>;
+      final list = body['msgArray'] as List? ?? [];
+      final out = <ScreenerQuote>[];
+      for (final raw in list) {
+        final row = raw as Map<String, dynamic>;
+        final code = row['c'] as String?;
+        if (code == null) continue;
+        final zStr = row['z'] as String?; // 成交價，'-' 代表還沒成交
+        final yStr = row['y'] as String?; // 昨收
+        final price = _num((zStr == '-' ? null : zStr) ?? yStr);
+        final prevClose = _num(yStr);
+        if (price == null || prevClose == null || prevClose == 0) continue;
+        out.add(ScreenerQuote(
+          code: code,
+          price: price,
+          prevClose: prevClose,
+          open: _num(row['o']) ?? price,
+          high: _num(row['h']) ?? price,
+          low: _num(row['l']) ?? price,
+          volumeLots: (_num(row['v']) ?? 0).round(),
+        ));
+      }
+      return out;
+    } catch (_) {
+      return const [];
+    }
   }
 
   Future<Map<String, PriceResult>> _fetchRealtimeBatch(List<String> codes) async {
