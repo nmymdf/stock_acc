@@ -170,6 +170,7 @@ class _ScreenerPanelState extends State<ScreenerPanel> {
   String? _error;
   int _scanned = 0;
   int _total = 0;
+  int _fetchedCount = 0;
 
   Future<void> _run(AppRepository repo) async {
     setState(() {
@@ -177,6 +178,7 @@ class _ScreenerPanelState extends State<ScreenerPanel> {
       _error = null;
       _hits = null;
       _scanned = 0;
+      _fetchedCount = 0;
     });
     try {
       final candidates = {
@@ -203,7 +205,12 @@ class _ScreenerPanelState extends State<ScreenerPanel> {
       }
 
       final hits = rankByMomentum(quotes);
-      if (mounted) setState(() => _hits = hits);
+      if (mounted) {
+        setState(() {
+          _hits = hits;
+          _fetchedCount = quotes.length;
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _error = '掃描失敗，請確認有網路連線後再試一次');
     } finally {
@@ -251,9 +258,16 @@ class _ScreenerPanelState extends State<ScreenerPanel> {
       if (_error != null)
         Padding(padding: const EdgeInsets.all(8), child: Text(_error!, style: const TextStyle(color: Colors.red))),
       if (_hits != null) ...[
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Text('成功取得 $_fetchedCount / $_total 檔候選的報價',
+              style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        ),
         SectionHeader(left: '今日動能排行（共 ${_hits!.length} 檔上漲候選）', right: _hits!.isEmpty ? null : '前 5 名特別標記'),
         RowList(
-          emptyText: '這次掃描沒有符合條件（今天上漲）的候選股',
+          emptyText: _fetchedCount == 0
+              ? '沒有抓到任何報價——可能是非交易時段、或網路連不到證交所，晚點/開盤時間再試一次'
+              : '這次掃描沒有符合條件（今天上漲）的候選股，可能是非交易時段（報價都是昨收）或今天普遍下跌',
           children: [
             for (var i = 0; i < _hits!.length; i++) _ScreenerRow(rank: i + 1, hit: _hits![i], repo: repo),
           ],
