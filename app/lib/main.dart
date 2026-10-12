@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'data/repository.dart';
+import 'services/lan_sync_controller.dart';
 import 'services/news_cache.dart';
 import 'ui/shell.dart';
 import 'ui/theme.dart';
@@ -20,6 +21,7 @@ class StockAccApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AppRepository()..load()),
         ChangeNotifierProvider(create: (_) => NewsCache()),
+        ChangeNotifierProvider(create: (_) => LanSyncController()),
       ],
       child: MaterialApp(
         title: '股票記帳',

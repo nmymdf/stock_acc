@@ -12,6 +12,7 @@ import '../../data/group_store.dart';
 import '../../data/repository.dart';
 import '../../models/models.dart';
 import '../widgets/common.dart';
+import '../widgets/lan_sync_section.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -166,6 +167,8 @@ class SettingsScreen extends StatelessWidget {
               ),
             ]),
           ),
+          const SectionHeader(left: '區網同步', right: '不透過雲端，兩台裝置要在同一個 WiFi'),
+          const LanSyncSection(),
           const Padding(
             padding: EdgeInsets.all(12),
             child: Text('手續費 = 成交金額 × 0.1425% × 折扣，最低 20 元。賣出交易稅 0.3%。每筆都可以手動改。',
