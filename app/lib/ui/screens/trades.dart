@@ -7,23 +7,55 @@ import 'package:provider/provider.dart';
 import '../../data/repository.dart';
 import '../../data/stock_catalog.dart';
 import '../../logic/fees.dart';
+import '../../logic/limit_price.dart';
 import '../../models/models.dart';
 import '../format.dart';
 import '../shell.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 
+/// 這筆交易是「今天」成交、而且這支股票今天有抓過即時報價時，用
+/// 「現價 - 漲跌」反推昨收，判斷成交價是不是今天的漲停/跌停價。舊交易
+/// 或報價不是今天抓的，資訊不可靠，回傳 null（不顯示，避免誤導）。
+LimitStatus? _tradeLimitStatus(AppRepository repo, Trade t) {
+  final now = DateTime.now();
+  final isToday = t.date.year == now.year && t.date.month == now.month && t.date.day == now.day;
+  if (!isToday) return null;
+  final quote = repo.quoteOf(t.code);
+  if (quote == null ||
+      quote.updatedAt.year != now.year ||
+      quote.updatedAt.month != now.month ||
+      quote.updatedAt.day != now.day) {
+    return null;
+  }
+  final status = classifyLimitStatus(t.price, quote.price - quote.change);
+  return status == LimitStatus.none ? null : status;
+}
+
 Widget buildTradeRow(BuildContext context, Trade t, {bool nested = false}) {
   final repo = context.watch<AppRepository>();
   final acc = repo.accountById(t.accountId);
   final person = acc == null ? null : repo.personById(acc.personId);
+  final limitStatus = _tradeLimitStatus(repo, t);
   return InfoRow(
     onTap: () => context
         .read<ShellController>()
         .open(context, TradeFormRoute(tradeId: t.id), nested: nested),
     title: Row(children: [
       SideBadge(isBuy: t.side == TradeSide.buy),
-      Text('${t.code}  ${repo.nameOf(t.code).isEmpty ? t.name : repo.nameOf(t.code)}'),
+      Flexible(child: Text('${t.code}  ${repo.nameOf(t.code).isEmpty ? t.name : repo.nameOf(t.code)}', overflow: TextOverflow.ellipsis)),
+      if (limitStatus != null) ...[
+        const SizedBox(width: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+          decoration: BoxDecoration(
+            color: Colors.redAccent.withValues(alpha: .14),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(limitStatus == LimitStatus.limitUp ? '漲停' : '跌停',
+              style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w700, fontSize: 11)),
+        ),
+      ],
     ]),
     subtitle: Text(
         '${t.date.month}/${t.date.day.toString().padLeft(2, '0')} · ${person?.name ?? ''}${acc == null ? '' : '-${acc.broker}'}'),
@@ -212,6 +244,28 @@ class _TradeFormDetailState extends State<TradeFormDetail> {
 
   String _trimNum(double n) => n == n.roundToDouble() ? n.toStringAsFixed(0) : n.toString();
 
+  bool _isToday(DateTime d) {
+    final now = DateTime.now();
+    return d.year == now.year && d.month == now.month && d.day == now.day;
+  }
+
+  /// 這筆交易如果是「今天」的，而且這支股票今天有抓過即時報價，就用
+  /// 「現價 - 漲跌」反推昨收，跟輸入的成交價比對是不是漲停/跌停價。
+  /// 舊交易、或報價不是今天抓的，資訊不可靠，不顯示，避免誤導。
+  String? _limitHintText(AppRepository repo, String code) {
+    if (!_isToday(_date) || code.isEmpty) return null;
+    final quote = repo.quoteOf(code);
+    if (quote == null || !_isToday(quote.updatedAt)) return null;
+    final price = double.tryParse(_priceCtrl.text);
+    if (price == null || price <= 0) return null;
+    final prevClose = quote.price - quote.change;
+    return switch (classifyLimitStatus(price, prevClose)) {
+      LimitStatus.limitUp => '這是今天的漲停價（前收 ${_trimNum(prevClose)}）',
+      LimitStatus.limitDown => '這是今天的跌停價（前收 ${_trimNum(prevClose)}）',
+      LimitStatus.none => null,
+    };
+  }
+
   double get _amount => (double.tryParse(_sharesCtrl.text) ?? 0) * (double.tryParse(_priceCtrl.text) ?? 0);
 
   void _recalc() {
@@ -343,11 +397,18 @@ class _TradeFormDetailState extends State<TradeFormDetail> {
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: TextField(
-                controller: _priceCtrl,
-                decoration: const InputDecoration(labelText: '成交價'),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                TextField(
+                  controller: _priceCtrl,
+                  decoration: const InputDecoration(labelText: '成交價'),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
+                if (_limitHintText(repo, code) case final hint?)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, left: 4),
+                    child: Text(hint, style: const TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.w600)),
+                  ),
+              ]),
             ),
           ]),
           const SizedBox(height: 12),
