@@ -43,9 +43,17 @@ jobs:
         working-directory: app
       - run: flutter build windows --release
         working-directory: app
+      # Artifact 的檔名（下載下來的 zip 檔名）帶上版本號，這樣每次下載
+      # 下來即使瀏覽器加了 (1) (2) 這種編號，也能一眼看出是哪一版。
+      - name: 讀取版本號
+        id: ver
+        shell: bash
+        run: |
+          VERSION=$(grep '^version:' app/pubspec.yaml | sed 's/version: //')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
-          name: stock_acc-windows
+          name: accstock_v${{ steps.ver.outputs.version }}-windows
           path: app/build/windows/x64/runner/Release/**
 
   build-android:
@@ -81,7 +89,18 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      # 檔名帶版本號，而且不要「release」這種字樣——Flutter 預設編出來的
+      # 檔名是 app-release.apk，複製改名成 accstock_v<版本>.apk 再上傳。
+      - name: 讀取版本號
+        id: ver
+        run: |
+          VERSION=$(grep '^version:' app/pubspec.yaml | sed 's/version: //')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: 改名成 accstock_v<版本>.apk
+        run: |
+          cp app/build/app/outputs/flutter-apk/app-release.apk \
+             app/build/app/outputs/flutter-apk/accstock_v${{ steps.ver.outputs.version }}.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: stock_acc-android
-          path: app/build/app/outputs/flutter-apk/app-release.apk
+          name: accstock_v${{ steps.ver.outputs.version }}-android
+          path: app/build/app/outputs/flutter-apk/accstock_v${{ steps.ver.outputs.version }}.apk

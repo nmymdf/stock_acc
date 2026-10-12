@@ -11,6 +11,7 @@ import '../format.dart';
 import '../shell.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/device_sync_button.dart';
 import '../widgets/refresh_price_button.dart';
 import 'holdings.dart' show buildStockRow;
 import 'search.dart';
@@ -27,7 +28,7 @@ class OverviewScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('總覽'),
-        actions: const [SearchButton(), RefreshPriceButton()],
+        actions: const [SearchButton(), RefreshPriceButton(), DeviceSyncButton()],
       ),
       body: ListView(
         padding: const EdgeInsets.all(12),

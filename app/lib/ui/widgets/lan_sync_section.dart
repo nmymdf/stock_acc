@@ -85,6 +85,7 @@ class LanSyncSection extends StatelessWidget {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
           builder: (dialogContext, setLocalState) => AlertDialog(
+              scrollable: true, // 鍵盤跳出來時內容要能捲動，不然按鈕會被鍵盤推到跟輸入框疊在一起
               title: const Text('連線到另一台裝置'),
               content: Column(mainAxisSize: MainAxisSize.min, children: [
                 TextField(controller: hostCtrl, decoration: const InputDecoration(labelText: '對方顯示的位址（例如 192.168.1.23）')),

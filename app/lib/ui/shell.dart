@@ -13,6 +13,7 @@ import 'screens/search.dart';
 import 'screens/settings.dart';
 import 'screens/trades.dart';
 import 'widgets/common.dart';
+import 'widgets/device_sync_button.dart';
 
 enum AppTab { overview, holdings, trades, info, settings }
 
@@ -64,6 +65,10 @@ class TradeFormRoute extends DetailRoute {
 class SearchRoute extends DetailRoute {
   final bool forWatch;
   const SearchRoute({this.forWatch = false});
+}
+
+class SyncRoute extends DetailRoute {
+  const SyncRoute();
 }
 
 /// 掌管目前選到的分頁、明細堆疊（寬螢幕用）、每個分頁各自的換頁堆疊（窄螢幕用）。
@@ -253,6 +258,7 @@ class DetailScaffold extends StatelessWidget {
       NewsListRoute r => NewsListDetail(code: r.code),
       TradeFormRoute r => TradeFormDetail(tradeId: r.tradeId, presetCode: r.presetCode, presetAccountId: r.presetAccountId),
       SearchRoute r => SearchDetail(forWatch: r.forWatch),
+      SyncRoute() => const DeviceSyncDetail(),
     };
     if (!embedded) {
       return content; // 窄螢幕：每個明細畫面自己是一個 Scaffold（見各檔案）。
