@@ -260,6 +260,7 @@ class AppRepository extends ChangeNotifier {
     required double price,
     required int fee,
     required int tax,
+    String note = '',
   }) async {
     final t = Trade(
       id: _uuid.v4(),
@@ -272,6 +273,7 @@ class AppRepository extends ChangeNotifier {
       price: price,
       fee: fee,
       tax: tax,
+      note: note,
       updatedAt: DateTime.now(),
     );
     await _mutate(() {
@@ -291,6 +293,7 @@ class AppRepository extends ChangeNotifier {
     double? price,
     int? fee,
     int? tax,
+    String? note,
   }) async {
     await _mutate(() {
       final t = tradeById(id);
@@ -303,6 +306,7 @@ class AppRepository extends ChangeNotifier {
       if (price != null) t.price = price;
       if (fee != null) t.fee = fee;
       if (tax != null) t.tax = tax;
+      if (note != null) t.note = note;
       t.updatedAt = DateTime.now();
       if (code != null || name != null) _rememberCustomName(t.code, t.name);
     });

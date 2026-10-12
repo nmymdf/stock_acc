@@ -78,6 +78,9 @@ class Trade {
   double price;
   int fee;
   int tax;
+
+  /// 這筆為什麼買／賣，選填，純粹給自己看的備忘。
+  String note;
   DateTime updatedAt;
 
   Trade({
@@ -91,6 +94,7 @@ class Trade {
     required this.price,
     required this.fee,
     required this.tax,
+    this.note = '',
     required this.updatedAt,
   });
 
@@ -111,6 +115,7 @@ class Trade {
         'price': price,
         'fee': fee,
         'tax': tax,
+        'note': note,
         'updatedAt': updatedAt.toIso8601String(),
       };
 
@@ -125,6 +130,7 @@ class Trade {
         price: (j['price'] as num).toDouble(),
         fee: j['fee'] as int,
         tax: j['tax'] as int,
+        note: j['note'] as String? ?? '',
         updatedAt: DateTime.parse(j['updatedAt'] as String),
       );
 }

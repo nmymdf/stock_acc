@@ -29,6 +29,7 @@ Widget buildTradeRow(BuildContext context, Trade t, {bool nested = false}) {
         '${t.date.month}/${t.date.day.toString().padLeft(2, '0')} · ${person?.name ?? ''}${acc == null ? '' : '-${acc.broker}'}'),
     trailingTop: Text(f0(t.netCashFlow.abs()), style: TextStyle(color: changeColor(context, t.side == TradeSide.buy ? -1 : 1))),
     trailingBottom: Text('${shareTxt(t.shares)} @ ${f2(t.price)}'),
+    footer: t.note.isEmpty ? null : Text('備註：${t.note}', maxLines: 1, overflow: TextOverflow.ellipsis),
   );
 }
 
@@ -180,6 +181,7 @@ class _TradeFormDetailState extends State<TradeFormDetail> {
   late final TextEditingController _priceCtrl;
   late final TextEditingController _feeCtrl;
   late final TextEditingController _taxCtrl;
+  late final TextEditingController _noteCtrl;
   DateTime _date = DateTime.now();
   bool _feeTouched = false;
   bool _taxTouched = false;
@@ -199,6 +201,7 @@ class _TradeFormDetailState extends State<TradeFormDetail> {
     _priceCtrl = TextEditingController(text: t == null ? '' : _trimNum(t.price));
     _feeCtrl = TextEditingController(text: t == null ? '0' : t.fee.toString());
     _taxCtrl = TextEditingController(text: t == null ? '0' : t.tax.toString());
+    _noteCtrl = TextEditingController(text: t?.note ?? '');
     _date = t?.date ?? DateTime.now();
     _feeTouched = t != null; // 修改舊資料時，手續費先當成「原本記錄的金額」，改了才算手動修改
     _taxTouched = t != null;
@@ -229,6 +232,7 @@ class _TradeFormDetailState extends State<TradeFormDetail> {
     _priceCtrl.dispose();
     _feeCtrl.dispose();
     _taxCtrl.dispose();
+    _noteCtrl.dispose();
     super.dispose();
   }
 
@@ -384,6 +388,12 @@ class _TradeFormDetailState extends State<TradeFormDetail> {
               ]),
             ),
           ]),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _noteCtrl,
+            decoration: const InputDecoration(labelText: '備註（選填）', hintText: '例如：財報公布前減碼、跌破季線停損'),
+            maxLines: 2,
+          ),
           const SizedBox(height: 16),
           Card(
             child: Padding(
@@ -419,6 +429,7 @@ class _TradeFormDetailState extends State<TradeFormDetail> {
                         price: price,
                         fee: fee,
                         tax: tax,
+                        note: _noteCtrl.text.trim(),
                       );
                     } else {
                       await repo.addTrade(
@@ -431,6 +442,7 @@ class _TradeFormDetailState extends State<TradeFormDetail> {
                         price: price,
                         fee: fee,
                         tax: tax,
+                        note: _noteCtrl.text.trim(),
                       );
                     }
                     if (context.mounted) {

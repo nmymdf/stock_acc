@@ -14,21 +14,21 @@ import 'screens/settings.dart';
 import 'screens/trades.dart';
 import 'widgets/common.dart';
 
-enum AppTab { overview, holdings, info, trades, settings }
+enum AppTab { overview, holdings, trades, info, settings }
 
 extension AppTabX on AppTab {
   String get label => switch (this) {
         AppTab.overview => '總覽',
         AppTab.holdings => '持股',
-        AppTab.info => '資訊',
         AppTab.trades => '交易',
+        AppTab.info => '資訊',
         AppTab.settings => '設定',
       };
   IconData get icon => switch (this) {
         AppTab.overview => Icons.donut_small,
         AppTab.holdings => Icons.list_alt,
-        AppTab.info => Icons.auto_awesome,
         AppTab.trades => Icons.swap_vert,
+        AppTab.info => Icons.auto_awesome,
         AppTab.settings => Icons.settings,
       };
 }
