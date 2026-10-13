@@ -20,6 +20,10 @@ class LocalStore {
 
   static String dataFileNameFor(String groupId) => 'stock_acc_data_$groupId.json';
 
+  /// 裝置同步上次連線成功的位址/埠號，跟記帳資料無關（換群體也不會變），
+  /// 單獨存一個固定檔名，不跟著群體走。
+  static const lanSyncPrefsFileName = 'stock_acc_lan_sync_prefs.json';
+
   Future<Directory> _dir() async {
     final dir = await getApplicationSupportDirectory();
     if (!await dir.exists()) {

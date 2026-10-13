@@ -4,12 +4,14 @@ library;
 
 import 'package:flutter/foundation.dart';
 
+import '../data/local_store.dart';
 import '../data/repository.dart';
 import 'lan_sync_service.dart';
 
 class LanSyncController extends ChangeNotifier {
   final _server = LanSyncServer();
   final _client = LanSyncClient();
+  final _store = LocalStore();
 
   bool get isSharing => _server.isRunning;
   String? get pin => _server.pin;
@@ -17,6 +19,25 @@ class LanSyncController extends ChangeNotifier {
   List<String> addresses = [];
   String? error;
   bool busy = false;
+
+  /// 上次連線成功的位址/埠號，連線對話框打開時拿來預先填好，不用每次
+  /// 都重打一次（驗證碼每次分享都會換新的，沒辦法記，還是要重打）。
+  String? lastHost;
+  int? lastPort;
+
+  Future<void> loadLastTarget() async {
+    final json = await _store.readNamed(LocalStore.lanSyncPrefsFileName);
+    if (json == null) return;
+    lastHost = json['host'] as String?;
+    lastPort = json['port'] as int?;
+    notifyListeners();
+  }
+
+  Future<void> _saveLastTarget(String host, int port) async {
+    lastHost = host;
+    lastPort = port;
+    await _store.writeNamed(LocalStore.lanSyncPrefsFileName, {'host': host, 'port': port});
+  }
 
   Future<void> startSharing(AppRepository repo) async {
     error = null;
@@ -49,6 +70,7 @@ class LanSyncController extends ChangeNotifier {
   }) async {
     final data = await _client.pull(host: host, port: port, pin: pin);
     await repo.importAllGroups(data);
+    await _saveLastTarget(host, port);
   }
 
   /// 把這台裝置的資料送到另一台（另一台要是正在「分享」的那一台）。
@@ -60,6 +82,7 @@ class LanSyncController extends ChangeNotifier {
   }) async {
     final data = await repo.exportAllGroups();
     await _client.push(host: host, port: port, pin: pin, data: data);
+    await _saveLastTarget(host, port);
   }
 
   @override

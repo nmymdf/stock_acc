@@ -74,8 +74,10 @@ class LanSyncSection extends StatelessWidget {
   }
 
   Future<void> _connectDialog(BuildContext context, LanSyncController sync) async {
-    final hostCtrl = TextEditingController();
-    final portCtrl = TextEditingController();
+    // 位址/埠號記得上次連線成功的值，不用每次都重打；驗證碼每次「開始
+    // 分享」都會換新的，沒辦法記，還是要看對方畫面重新輸入。
+    final hostCtrl = TextEditingController(text: sync.lastHost ?? '');
+    final portCtrl = TextEditingController(text: sync.lastPort?.toString() ?? '');
     final pinCtrl = TextEditingController();
     final repo = context.read<AppRepository>();
     bool busy = false;
@@ -98,6 +100,7 @@ class LanSyncSection extends StatelessWidget {
                 const SizedBox(height: 10),
                 TextField(
                   controller: pinCtrl,
+                  autofocus: sync.lastHost != null,
                   decoration: const InputDecoration(labelText: '驗證碼'),
                   keyboardType: TextInputType.number,
                 ),

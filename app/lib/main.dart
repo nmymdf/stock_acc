@@ -21,7 +21,7 @@ class StockAccApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AppRepository()..load()),
         ChangeNotifierProvider(create: (_) => NewsCache()),
-        ChangeNotifierProvider(create: (_) => LanSyncController()),
+        ChangeNotifierProvider(create: (_) => LanSyncController()..loadLastTarget()),
       ],
       child: MaterialApp(
         title: '股票記帳',
